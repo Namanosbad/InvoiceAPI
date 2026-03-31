@@ -7,6 +7,6 @@
         public string? CompanyName { get; set; }
         public string? TaxId { get; set; }
         public string? Address { get; set; }
-        public virtual ICollection<Invoice> Invoices { get; set; }
+        public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     }
 }
