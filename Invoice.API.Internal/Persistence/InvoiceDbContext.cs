@@ -1,12 +1,13 @@
 using Invoice.API.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using InvoiceEntity = Invoice.API.Domain.Entities.Invoice;
 
 namespace Invoice.API.Internal.Persistence
 {
     public class InvoiceDbContext(DbContextOptions<InvoiceDbContext> options) : DbContext(options)
     {
         public DbSet<Client> Clients => Set<Client>();
-        public DbSet<Invoice> Invoices => Set<Invoice>();
+        public DbSet<InvoiceEntity> Invoices => Set<InvoiceEntity>();
         public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
         public DbSet<ServiceItem> ServiceItems => Set<ServiceItem>();
 
@@ -36,7 +37,7 @@ namespace Invoice.API.Internal.Persistence
                 entity.Property(serviceItem => serviceItem.DefaultPrice).HasPrecision(18, 2);
             });
 
-            modelBuilder.Entity<Invoice>(entity =>
+            modelBuilder.Entity<InvoiceEntity>(entity =>
             {
                 entity.ToTable("Invoices");
 

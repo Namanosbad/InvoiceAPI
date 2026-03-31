@@ -3,6 +3,7 @@ using Invoice.API.Internal.Models.Invoices;
 using Invoice.API.Internal.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using InvoiceEntity = Invoice.API.Domain.Entities.Invoice;
 
 namespace Invoice.API.Internal.Controllers
 {
@@ -11,7 +12,7 @@ namespace Invoice.API.Internal.Controllers
     public class InvoicesController(InvoiceDbContext dbContext) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyCollection<Invoice>>> GetAll(CancellationToken cancellationToken)
+        public async Task<ActionResult<IReadOnlyCollection<InvoiceEntity>>> GetAll(CancellationToken cancellationToken)
         {
             var invoices = await dbContext.Invoices
                 .AsNoTracking()
@@ -24,7 +25,7 @@ namespace Invoice.API.Internal.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<ActionResult<Invoice>> GetById(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult<InvoiceEntity>> GetById(Guid id, CancellationToken cancellationToken)
         {
             var invoice = await dbContext.Invoices
                 .AsNoTracking()
@@ -41,7 +42,7 @@ namespace Invoice.API.Internal.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Invoice>> Create([FromBody] CreateInvoiceRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<InvoiceEntity>> Create([FromBody] CreateInvoiceRequest request, CancellationToken cancellationToken)
         {
             var clientExists = await dbContext.Clients
                 .AnyAsync(client => client.Id == request.ClientId, cancellationToken);
@@ -68,7 +69,7 @@ namespace Invoice.API.Internal.Controllers
                 return BadRequest("One or more ServiceItemId values do not exist.");
             }
 
-            var invoice = new Invoice
+            var invoice = new InvoiceEntity
             {
                 ClientId = request.ClientId,
                 IssueDate = request.IssueDate,
@@ -106,7 +107,7 @@ namespace Invoice.API.Internal.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<ActionResult<Invoice>> Update(Guid id, [FromBody] UpdateInvoiceRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<InvoiceEntity>> Update(Guid id, [FromBody] UpdateInvoiceRequest request, CancellationToken cancellationToken)
         {
             var invoice = await dbContext.Invoices
                 .Include(entity => entity.InvoiceItems)
@@ -169,7 +170,7 @@ namespace Invoice.API.Internal.Controllers
         }
 
         [HttpPatch("{id:guid}/status")]
-        public async Task<ActionResult<Invoice>> UpdateStatus(Guid id, [FromBody] UpdateInvoiceStatusRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<InvoiceEntity>> UpdateStatus(Guid id, [FromBody] UpdateInvoiceStatusRequest request, CancellationToken cancellationToken)
         {
             var invoice = await dbContext.Invoices
                 .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
