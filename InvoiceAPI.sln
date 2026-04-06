@@ -20,6 +20,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{D6345D78-D49A-4ECF-B1F2-E40F452EA2C6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionsItems", "SolutionsItems", "{3176B547-6AFE-49E5-9B9F-88910143A889}"
+	ProjectSection(SolutionItems) = preProject
+		SolutionsItems.txt = SolutionsItems.txt
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Invoice.API.Domain", "Invoice.API.Domain\Invoice.API.Domain.csproj", "{4BEF8CD6-0A69-4CD3-971B-0346AD0EA66A}"
 EndProject
