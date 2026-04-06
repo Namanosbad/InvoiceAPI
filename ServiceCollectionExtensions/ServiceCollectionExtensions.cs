@@ -1,29 +1,44 @@
-﻿using Invoice.API.Internal.Persistence;
+﻿using Invoice.API.Database.Repositories;
+using Invoice.API.Domain.Repositories;
+using Invoice.API.Internal.Persistence;
 using Invoice.Shared.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
 
 namespace ServiceCollectionExtensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddServices (this IServiceCollection services, IConfiguration configuration) 
+        public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext(configuration);
+            services
+                .AddDbContext(configuration)
+                .AddRepositories();
+
             return services;
         }
-        public static IServiceCollection AddDbContext (this IServiceCollection services, IConfiguration configuration)
+
+        public static IServiceCollection AddDbContext(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<DbConfig>(config => configuration.GetRequiredSection(nameof(DbConfig)).Bind(config));
 
             services.AddDbContext<InvoiceDbContext>((serviceProvider, options) =>
             {
                 var config = serviceProvider.GetRequiredService<IOptions<DbConfig>>().Value;
-                var connectionString = config.ConnectionString;
-                options.UseSqlServer(connectionString);
+                options.UseSqlServer(config.ConnectionString);
             });
+
+            return services;
+        }
+
+        public static IServiceCollection AddRepositories(this IServiceCollection services)
+        {
+            services.AddScoped<IClientRepository, ClientRepository>();
+            services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+            services.AddScoped<IServiceItemRepository, ServiceItemRepository>();
+
             return services;
         }
     }
