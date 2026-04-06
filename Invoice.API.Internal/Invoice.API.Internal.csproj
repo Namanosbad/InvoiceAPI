@@ -17,4 +17,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceCollectionExtensions\Invoice.API.Ioc.csproj" />
+  </ItemGroup>
+
 </Project>
