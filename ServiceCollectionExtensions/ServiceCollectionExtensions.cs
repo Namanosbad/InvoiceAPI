@@ -1,5 +1,6 @@
 ﻿using Invoice.API.Database.Repositories;
 using Invoice.API.Domain.Repositories;
+using Invoice.API.Domain.Services;
 using Invoice.API.Internal.Persistence;
 using Invoice.Shared.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -13,9 +14,8 @@ namespace ServiceCollectionExtensions
     {
         public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services
-                .AddDbContext(configuration)
-                .AddRepositories();
+            services.AddDbContext(configuration);
+            services.AddApplicationServices();
 
             return services;
         }
@@ -33,13 +33,15 @@ namespace ServiceCollectionExtensions
             return services;
         }
 
-        public static IServiceCollection AddRepositories(this IServiceCollection services)
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IInvoiceRepository, InvoiceRepository>();
             services.AddScoped<IServiceItemRepository, ServiceItemRepository>();
+            services.AddScoped<IInvoiceService, InvoiceService>();
 
             return services;
         }
+
     }
 }

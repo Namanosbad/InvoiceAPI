@@ -12,5 +12,10 @@
 
         public Guid ServiceItemId { get; set; }
         public virtual ServiceItem ServiceItem { get; set; }
+
+        public void RecalculateTotal()
+        {
+            Total = UnitPrice * Quantity;
+        }
     }
 }

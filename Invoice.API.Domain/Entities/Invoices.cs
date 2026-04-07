@@ -11,5 +11,10 @@ namespace Invoice.API.Domain.Entities
         public virtual Client Client { get; set; }
 
         public virtual ICollection<InvoiceItem> InvoiceItems { get; set; } = new List<InvoiceItem>();
+
+        public void RecalculateTotalAmount()
+        {
+            TotalAmount = InvoiceItems.Sum(item => item.Total);
+        }
     }
 }
