@@ -4,10 +4,14 @@ using ServiceCollectionExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// DEBUG de ambiente (pode remover depois)
+Console.WriteLine($"ENVIRONMENT: {builder.Environment.EnvironmentName}");
+
 // Add services to the container.
 builder.Services.AddServices(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -32,8 +36,9 @@ builder.Services.AddSwaggerGen(c =>
         c.IncludeXmlComments(apiXmlPath, includeControllerXmlComments: true);
     }
 
-    var applicationXmlFile = "Invoice.Application.xml";
+    var applicationXmlFile = "Invoice.API.Application.xml";
     var applicationXmlPath = Path.Combine(AppContext.BaseDirectory, applicationXmlFile);
+
     if (File.Exists(applicationXmlPath))
     {
         c.IncludeXmlComments(applicationXmlPath);
@@ -42,14 +47,19 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Invoice API v1");
-    });
 
-app.UseHttpsRedirection();
+app.UseSwagger();
+
+app.UseSwagger(c =>
+{
+    c.PreSerializeFilters.Add((swagger, httpReq) =>
+    {
+        swagger.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+        {
+            new() { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}" }
+        };
+    });
+});
 
 app.UseAuthorization();
 
