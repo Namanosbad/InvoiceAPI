@@ -7,10 +7,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Invoice.API.Internal.Controllers;
 
+/// <summary>
+/// Endpoints para consulta e gerenciamento de faturas.
+/// </summary>
 [ApiController]
 [Route("api/invoices")]
 public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceRepository invoiceRepository) : ControllerBase
 {
+    /// <summary>
+    /// Lista todas as faturas.
+    /// </summary>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <returns>Lista simples de faturas.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(List<InvoiceResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
@@ -19,6 +27,12 @@ public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceR
         return Ok(invoices.Select(ToResponse));
     }
 
+    /// <summary>
+    /// Busca uma fatura pelo identificador.
+    /// </summary>
+    /// <param name="id">Identificador da fatura.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <returns>Fatura encontrada.</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(InvoiceResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -33,6 +47,12 @@ public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceR
         return Ok(ToResponse(invoice));
     }
 
+    /// <summary>
+    /// Cria uma nova fatura.
+    /// </summary>
+    /// <param name="request">Dados de criação da fatura.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <returns>Fatura criada.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(InvoiceResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,6 +84,13 @@ public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceR
         }
     }
 
+    /// <summary>
+    /// Atualiza o status de uma fatura.
+    /// </summary>
+    /// <param name="id">Identificador da fatura.</param>
+    /// <param name="request">Novo status.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <returns>Fatura atualizada.</returns>
     [HttpPatch("{id:guid}/status")]
     [ProducesResponseType(typeof(InvoiceResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
