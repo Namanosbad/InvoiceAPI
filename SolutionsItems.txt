@@ -1,3 +1,13 @@
 dotnet ef migrations add InitialCreate --project Invoice.API.Database --startup-project Invoice.API.Internal --output-dir Migrations
 
 dotnet ef database update --project Invoice.API.Database --startup-project Invoice.API.Internal
+docker build -t invoice-api -f Invoice.API.Internal/Dockerfile .
+
+docker stop invoice-api
+docker rm invoice-api
+docker run -d -p 8080:8080 --name invoice-api `
+  --add-host=host.docker.internal:host-gateway `
+  -e ASPNETCORE_HTTP_PORTS="8080" `
+  -e ASPNETCORE_ENVIRONMENT="Development" `
+  -e DbConfig__ConnectionString="Server=host.docker.internal,1433;Database=InvoiceDbContext;User Id=sa;Password=StrongPass!123;TrustServerCertificate=True;Encrypt=False" `
+  invoice-api

@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Invoice.API.Application\Invoice.API.Application.csproj" />
     <ProjectReference Include="..\Invoice.API.Database\Invoice.API.Database.csproj" />
     <ProjectReference Include="..\Invoice.Shared\Invoice.Shared.csproj" />
   </ItemGroup>
