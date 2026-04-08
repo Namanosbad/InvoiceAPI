@@ -7,35 +7,47 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddServices(builder.Configuration);
 builder.Services.AddControllers();
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Invoice API",
         Version = "v1",
         Description = "API interna para gerenciamento de faturas.",
+        TermsOfService = new Uri("https://github.com/Namanosbad"),
+        Contact = new OpenApiContact
+        {
+            Name = "Matheus Lima",
+            Email = "matheus.limamst@gmail.com",
+            Url = new Uri("https://www.linkedin.com/in/matheuslimamst/"),
+        }
     });
 
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    var apiXmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var apiXmlPath = Path.Combine(AppContext.BaseDirectory, apiXmlFile);
 
-    if (File.Exists(xmlPath))
+    if (File.Exists(apiXmlPath))
     {
-        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+        c.IncludeXmlComments(apiXmlPath, includeControllerXmlComments: true);
+    }
+
+    var applicationXmlFile = "Invoice.Application.xml";
+    var applicationXmlPath = Path.Combine(AppContext.BaseDirectory, applicationXmlFile);
+    if (File.Exists(applicationXmlPath))
+    {
+        c.IncludeXmlComments(applicationXmlPath);
     }
 });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Invoice API v1");
     });
-}
 
 app.UseHttpsRedirection();
 
