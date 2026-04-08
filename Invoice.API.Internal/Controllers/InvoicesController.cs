@@ -1,7 +1,7 @@
 using Invoice.API.Domain.Entities;
 using Invoice.API.Domain.Repositories;
 using Invoice.API.Domain.Services;
-using Invoice.API.Internal.Contracts.Requests;
+using Invoice.API.Application.Requests;
 using Invoice.API.Internal.Contracts.Responses;
 using Microsoft.AspNetCore.Mvc;
 

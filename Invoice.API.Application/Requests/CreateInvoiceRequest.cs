@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Invoice.API.
+namespace Invoice.API.Application.Requests;
+
 public sealed class CreateInvoiceRequest
 {
     [Required]

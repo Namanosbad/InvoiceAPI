@@ -1,7 +1,7 @@
 using Invoice.API.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace Invoice.API.Internal.Contracts.Requests;
+namespace Invoice.API.Application.Requests;
 
 public sealed class UpdateInvoiceStatusRequest
 {
