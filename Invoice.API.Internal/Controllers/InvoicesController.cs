@@ -4,6 +4,9 @@ using Invoice.API.Domain.Services;
 using Invoice.API.Application.Requests;
 using Invoice.API.Internal.Contracts.Responses;
 using Microsoft.AspNetCore.Mvc;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace Invoice.API.Internal.Controllers;
 
@@ -45,6 +48,29 @@ public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceR
         }
 
         return Ok(ToResponse(invoice));
+    }
+
+    /// <summary>
+    /// Gera o PDF de uma fatura específica.
+    /// </summary>
+    /// <param name="id">Identificador da fatura.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <returns>Arquivo PDF da fatura.</returns>
+    [HttpGet("{id:guid}/pdf")]
+    [Produces("application/pdf")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadPdf(Guid id, CancellationToken cancellationToken)
+    {
+        var invoice = await invoiceRepository.GetByIdAsync(id, cancellationToken);
+        if (invoice is null)
+        {
+            return NotFound(new { message = "Invoice not found." });
+        }
+
+        var pdfBytes = BuildInvoicePdf(invoice);
+        var fileName = $"invoice-{invoice.Id:N}.pdf";
+        return File(pdfBytes, "application/pdf", fileName);
     }
 
     /// <summary>
@@ -133,5 +159,85 @@ public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceR
                 Total = item.Total
             }).ToList()
         };
+    }
+
+    private static byte[] BuildInvoicePdf(Invoices invoice)
+    {
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(24);
+                page.Size(PageSizes.A4);
+                page.DefaultTextStyle(x => x.FontSize(11));
+
+                page.Header().Column(column =>
+                {
+                    column.Item().Text("Invoice").FontSize(24).SemiBold();
+                    column.Item().Text($"Invoice ID: {invoice.Id}");
+                    column.Item().Text($"Issue Date: {invoice.IssueDate:yyyy-MM-dd HH:mm} UTC");
+                    column.Item().Text($"Status: {invoice.Status}");
+                });
+
+                page.Content().PaddingVertical(16).Column(column =>
+                {
+                    column.Spacing(10);
+
+                    column.Item().Text("Client").FontSize(14).SemiBold();
+                    column.Item().Text(invoice.Client?.Name ?? "N/A");
+                    column.Item().Text(invoice.Client?.Email ?? "N/A");
+                    column.Item().Text(invoice.Client?.CompanyName ?? "N/A");
+                    column.Item().Text(invoice.Client?.Address ?? "N/A");
+
+                    column.Item().PaddingTop(8).Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(4);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellHeaderStyle).Text("Description");
+                            header.Cell().Element(CellHeaderStyle).AlignRight().Text("Qty");
+                            header.Cell().Element(CellHeaderStyle).AlignRight().Text("Unit Price");
+                            header.Cell().Element(CellHeaderStyle).AlignRight().Text("Total");
+                        });
+
+                        foreach (var item in invoice.InvoiceItems)
+                        {
+                            table.Cell().Element(CellBodyStyle).Text(item.Description ?? "Item");
+                            table.Cell().Element(CellBodyStyle).AlignRight().Text(item.Quantity.ToString());
+                            table.Cell().Element(CellBodyStyle).AlignRight().Text($"{item.UnitPrice:0.00}");
+                            table.Cell().Element(CellBodyStyle).AlignRight().Text($"{item.Total:0.00}");
+                        }
+                    });
+                });
+
+                page.Footer().AlignRight().Text($"Total: {invoice.TotalAmount:0.00}").FontSize(16).SemiBold();
+            });
+        }).GeneratePdf();
+    }
+
+    private static IContainer CellHeaderStyle(IContainer container)
+    {
+        return container
+            .Background(Colors.Grey.Lighten2)
+            .PaddingVertical(6)
+            .PaddingHorizontal(6)
+            .BorderBottom(1)
+            .BorderColor(Colors.Grey.Darken1);
+    }
+
+    private static IContainer CellBodyStyle(IContainer container)
+    {
+        return container
+            .PaddingVertical(6)
+            .PaddingHorizontal(6)
+            .BorderBottom(1)
+            .BorderColor(Colors.Grey.Lighten2);
     }
 }
