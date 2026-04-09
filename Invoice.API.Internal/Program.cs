@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
 using ServiceCollectionExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +48,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+QuestPDF.Settings.License = LicenseType.Community;
 
 app.UseSwagger();
 
