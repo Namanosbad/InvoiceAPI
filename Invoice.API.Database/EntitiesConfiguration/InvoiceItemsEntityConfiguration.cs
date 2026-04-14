@@ -12,9 +12,8 @@ namespace Invoice.API.Database.EntitiesConfiguration
 
             builder.HasKey(invoiceItem => invoiceItem.Id);
             builder.Property(invoiceItem => invoiceItem.Description)
-                .IsRequired()
                 .HasMaxLength(500);
-            builder.Property(invoiceItem => invoiceItem.Quantity).HasPrecision(18, 2);
+            builder.Property(invoiceItem => invoiceItem.Quantity).IsRequired();
             builder.Property(invoiceItem => invoiceItem.UnitPrice).HasPrecision(18, 2);
             builder.Property(invoiceItem => invoiceItem.Total).HasPrecision(18, 2);
 

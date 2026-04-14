@@ -1,7 +1,7 @@
 using Invoice.API.Application.Requests;
-using Invoice.API.Domain.Entities;
-using Invoice.API.Domain.Repositories;
+using Invoice.API.Domain.Services;
 using Invoice.API.Internal.Contracts.Responses;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Invoice.API.Internal.Controllers;
@@ -11,7 +11,7 @@ namespace Invoice.API.Internal.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/service-items")]
-public sealed class ServiceItemsController(IServiceItemRepository serviceItemRepository) : ControllerBase
+public sealed class ServiceItemsController(IServiceItemService serviceItemService, IMapper mapper) : ControllerBase
 {
     /// <summary>
     /// Retorna todos os itens de servico cadastrados.
@@ -23,8 +23,8 @@ public sealed class ServiceItemsController(IServiceItemRepository serviceItemRep
     [ProducesResponseType(typeof(List<ServiceItemResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var serviceItems = await serviceItemRepository.GetAllAsync(cancellationToken);
-        return Ok(serviceItems.Select(ToResponse));
+        var serviceItems = await serviceItemService.GetAllAsync(cancellationToken);
+        return Ok(mapper.Map<List<ServiceItemResponse>>(serviceItems));
     }
 
     /// <summary>
@@ -40,14 +40,14 @@ public sealed class ServiceItemsController(IServiceItemRepository serviceItemRep
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var serviceItem = await serviceItemRepository.GetByIdAsync(id, cancellationToken);
+        var serviceItem = await serviceItemService.GetByIdAsync(id, cancellationToken);
 
         if (serviceItem is null)
         {
             return NotFound(new { message = "Service item not found." });
         }
 
-        return Ok(ToResponse(serviceItem));
+        return Ok(mapper.Map<ServiceItemResponse>(serviceItem));
     }
 
     /// <summary>
@@ -59,30 +59,12 @@ public sealed class ServiceItemsController(IServiceItemRepository serviceItemRep
     /// <response code="201">Item de servico criado com sucesso.</response>
     [HttpPost]
     [ProducesResponseType(typeof(ServiceItemResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(
         [FromBody] CreateServiceItemRequest request,
         CancellationToken cancellationToken)
     {
-        var serviceItem = new ServiceItem
-        {
-            Name = request.Name,
-            DefaultPrice = request.DefaultPrice,
-            UnitType = request.UnitType
-        };
-
-        await serviceItemRepository.AddAsync(serviceItem, cancellationToken);
-
-        return CreatedAtAction(nameof(GetById), new { id = serviceItem.Id }, ToResponse(serviceItem));
-    }
-
-    private static ServiceItemResponse ToResponse(ServiceItem serviceItem)
-    {
-        return new ServiceItemResponse
-        {
-            Id = serviceItem.Id,
-            Name = serviceItem.Name,
-            DefaultPrice = serviceItem.DefaultPrice,
-            UnitType = serviceItem.UnitType
-        };
+        var serviceItem = await serviceItemService.CreateAsync(request, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = serviceItem.Id }, mapper.Map<ServiceItemResponse>(serviceItem));
     }
 }
