@@ -12,7 +12,10 @@ namespace Invoice.API.Internal.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/invoices")]
-public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceRepository invoiceRepository) : ControllerBase
+public sealed class InvoicesController(
+    IInvoiceService invoiceService,
+    IInvoicePdfService invoicePdfService,
+    IInvoiceRepository invoiceRepository) : ControllerBase
 {
     /// <summary>
     /// Lista todas as faturas.
@@ -111,6 +114,30 @@ public sealed class InvoicesController(IInvoiceService invoiceService, IInvoiceR
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+
+    /// <summary>
+    /// Gera o PDF de uma fatura.
+    /// </summary>
+    /// <param name="id">Identificador da fatura.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <returns>Arquivo PDF da fatura.</returns>
+    [HttpGet("{id:guid}/pdf")]
+    [Produces("application/pdf")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPdf(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var pdfBytes = await invoicePdfService.GenerateAsync(id, cancellationToken);
+            return File(pdfBytes, "application/pdf", $"invoice-{id}.pdf");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
         }
     }
 
