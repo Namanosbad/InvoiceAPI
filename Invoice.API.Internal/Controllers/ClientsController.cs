@@ -1,6 +1,5 @@
 using Invoice.API.Application.Requests;
-using Invoice.API.Domain.Entities;
-using Invoice.API.Domain.Repositories;
+using Invoice.API.Domain.Services;
 using Invoice.API.Internal.Contracts.Responses;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +10,7 @@ namespace Invoice.API.Internal.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/clients")]
-public sealed class ClientsController(IClientRepository clientRepository) : ControllerBase
+public sealed class ClientsController(IClientService clientService) : ControllerBase
 {
     /// <summary>
     /// Retorna todos os clientes cadastrados.
@@ -23,8 +22,8 @@ public sealed class ClientsController(IClientRepository clientRepository) : Cont
     [ProducesResponseType(typeof(List<ClientResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var clients = await clientRepository.GetAllAsync(cancellationToken);
-        return Ok(clients.Select(ToResponse));
+        var clients = await clientService.GetAllAsync(cancellationToken);
+        return Ok(clients);
     }
 
     /// <summary>
@@ -40,14 +39,14 @@ public sealed class ClientsController(IClientRepository clientRepository) : Cont
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var client = await clientRepository.GetByIdAsync(id, cancellationToken);
+        var client = await clientService.GetByIdAsync(id, cancellationToken);
 
         if (client is null)
         {
             return NotFound(new { message = "Client not found." });
         }
 
-        return Ok(ToResponse(client));
+        return Ok(client);
     }
 
     /// <summary>
@@ -63,30 +62,8 @@ public sealed class ClientsController(IClientRepository clientRepository) : Cont
         [FromBody] CreateClientRequest request,
         CancellationToken cancellationToken)
     {
-        var client = new Client
-        {
-            Name = request.Name,
-            Email = request.Email,
-            CompanyName = request.CompanyName,
-            TaxId = request.TaxId,
-            Address = request.Address
-        };
+        var client = await clientService.CreateAsync(request, cancellationToken);
 
-        await clientRepository.AddAsync(client, cancellationToken);
-
-        return CreatedAtAction(nameof(GetById), new { id = client.Id }, ToResponse(client));
-    }
-
-    private static ClientResponse ToResponse(Client client)
-    {
-        return new ClientResponse
-        {
-            Id = client.Id,
-            Name = client.Name,
-            Email = client.Email,
-            CompanyName = client.CompanyName,
-            TaxId = client.TaxId,
-            Address = client.Address
-        };
+        return CreatedAtAction(nameof(GetById), new { id = client.Id }, client);
     }
 }
