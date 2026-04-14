@@ -10,6 +10,7 @@ Console.WriteLine($"ENVIRONMENT: {builder.Environment.EnvironmentName}");
 
 // Add services to the container.
 builder.Services.AddServices(builder.Configuration);
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 

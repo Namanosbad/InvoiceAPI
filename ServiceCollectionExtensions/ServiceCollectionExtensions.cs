@@ -39,6 +39,8 @@ namespace ServiceCollectionExtensions
             services.AddScoped<IInvoiceRepository, InvoiceRepository>();
             services.AddScoped<IServiceItemRepository, ServiceItemRepository>();
             services.AddScoped<IInvoiceService, InvoiceService>();
+            services.AddScoped<IClientService, ClientService>();
+            services.AddScoped<IServiceItemService, ServiceItemService>();
 
             return services;
         }

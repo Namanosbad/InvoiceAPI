@@ -1,6 +1,10 @@
 using Invoice.API.Domain.Entities;
 using Invoice.API.Domain.Enums;
 using Invoice.API.Domain.Repositories;
+using Invoice.API.Application.Requests;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace Invoice.API.Domain.Services
 {
@@ -9,9 +13,32 @@ namespace Invoice.API.Domain.Services
         IClientRepository clientRepository,
         IServiceItemRepository serviceItemRepository) : IInvoiceService
     {
-        public async Task<Invoices> CreateAsync(Invoices invoice, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<Invoices>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            ArgumentNullException.ThrowIfNull(invoice);
+            return invoiceRepository.GetAllAsync(cancellationToken);
+        }
+
+        public Task<Invoices?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return invoiceRepository.GetByIdAsync(id, cancellationToken);
+        }
+
+        public async Task<Invoices> CreateAsync(CreateInvoiceRequest request, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            var invoice = new Invoices
+            {
+                ClientId = request.ClientId,
+                IssueDate = request.IssueDate ?? DateTime.UtcNow,
+                InvoiceItems = request.Items.Select(item => new InvoiceItem
+                {
+                    ServiceItemId = item.ServiceItemId,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice ?? 0,
+                    Description = item.Description
+                }).ToList()
+            };
 
             if (invoice.InvoiceItems is null || invoice.InvoiceItems.Count == 0)
             {
@@ -52,6 +79,67 @@ namespace Invoice.API.Domain.Services
             await invoiceRepository.UpdateAsync(invoice, cancellationToken);
 
             return invoice;
+        }
+
+        public byte[] GeneratePdf(Invoices invoice)
+        {
+            return Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(24);
+                    page.Size(PageSizes.A4);
+                    page.DefaultTextStyle(x => x.FontSize(11));
+
+                    page.Header().Column(column =>
+                    {
+                        column.Item().Text("Invoice").FontSize(24).SemiBold();
+                        column.Item().Text($"Invoice ID: {invoice.Id}");
+                        column.Item().Text($"Issue Date: {invoice.IssueDate:yyyy-MM-dd HH:mm} UTC");
+                        column.Item().Text($"Status: {invoice.Status}");
+                    });
+
+                    page.Content().PaddingVertical(16).Column(column =>
+                    {
+                        column.Spacing(10);
+
+                        column.Item().Text("Client").FontSize(14).SemiBold();
+                        column.Item().Text(invoice.Client?.Name ?? "N/A");
+                        column.Item().Text(invoice.Client?.Email ?? "N/A");
+                        column.Item().Text(invoice.Client?.CompanyName ?? "N/A");
+                        column.Item().Text(invoice.Client?.Address ?? "N/A");
+
+                        column.Item().PaddingTop(8).Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(4);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(2);
+                                columns.RelativeColumn(2);
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Element(CellHeaderStyle).Text("Description");
+                                header.Cell().Element(CellHeaderStyle).AlignRight().Text("Qty");
+                                header.Cell().Element(CellHeaderStyle).AlignRight().Text("Unit Price");
+                                header.Cell().Element(CellHeaderStyle).AlignRight().Text("Total");
+                            });
+
+                            foreach (var item in invoice.InvoiceItems)
+                            {
+                                table.Cell().Element(CellBodyStyle).Text(item.Description ?? "Item");
+                                table.Cell().Element(CellBodyStyle).AlignRight().Text(item.Quantity.ToString());
+                                table.Cell().Element(CellBodyStyle).AlignRight().Text($"{item.UnitPrice:0.00}");
+                                table.Cell().Element(CellBodyStyle).AlignRight().Text($"{item.Total:0.00}");
+                            }
+                        });
+                    });
+
+                    page.Footer().AlignRight().Text($"Total: {invoice.TotalAmount:0.00}").FontSize(16).SemiBold();
+                });
+            }).GeneratePdf();
         }
 
         private async Task NormalizeItemAsync(Guid invoiceId, InvoiceItem item, CancellationToken cancellationToken)
@@ -104,6 +192,25 @@ namespace Invoice.API.Domain.Services
             }
 
             return false;
+        }
+
+        private static IContainer CellHeaderStyle(IContainer container)
+        {
+            return container
+                .Background(Colors.Grey.Lighten2)
+                .PaddingVertical(6)
+                .PaddingHorizontal(6)
+                .BorderBottom(1)
+                .BorderColor(Colors.Grey.Darken1);
+        }
+
+        private static IContainer CellBodyStyle(IContainer container)
+        {
+            return container
+                .PaddingVertical(6)
+                .PaddingHorizontal(6)
+                .BorderBottom(1)
+                .BorderColor(Colors.Grey.Lighten2);
         }
     }
 }
