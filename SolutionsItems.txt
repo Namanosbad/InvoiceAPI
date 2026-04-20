@@ -2,7 +2,7 @@ dotnet ef migrations add InitialCreate --project Invoice.API.Database --startup-
 
 dotnet ef database update --project Invoice.API.Database --startup-project Invoice.API.Internal
 
-  docker stop invoice-api
+docker stop invoice-api
 docker rm invoice-api
 docker build --no-cache -t invoice-api -f Invoice.API.Internal/Dockerfile .
 docker run -d -p 8080:8080 --name invoice-api `
