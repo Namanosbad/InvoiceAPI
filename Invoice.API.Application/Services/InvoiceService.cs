@@ -94,13 +94,13 @@ namespace Invoice.API.Domain.Services
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(10).FontColor(Colors.Grey.Darken4).FontFamily(Fonts.Arial));
 
-                    // --- CABEÇALHO (Logo e ID da Invoice) ---
+                    // --- CABEÃ‡ALHO (Logo e ID da Invoice) ---
                     page.Header().Row(row =>
                     {
                         row.RelativeItem().Column(col =>
                         {
                             col.Item().Text("MTECH LTDA.").FontSize(14).ExtraBold().FontColor(accentColor);
-                            col.Item().Text("São Paulo, SP").FontSize(9).FontColor(Colors.Grey.Medium);
+                            col.Item().Text("SÃ£o Paulo, SP").FontSize(9).FontColor(Colors.Grey.Medium);
                         });
 
                         row.RelativeItem().AlignRight().Column(col =>
@@ -116,7 +116,7 @@ namespace Invoice.API.Domain.Services
 
                     page.Content().PaddingVertical(40).Column(column =>
                     {
-                        // --- BARRA DE INFORMAÇÕES (Dados da API) ---
+                        // --- BARRA DE INFORMAÃ‡Ã•ES (Dados da API) ---
                         column.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).PaddingBottom(10).Row(row =>
                         {
                             // Dados do Cliente
@@ -151,10 +151,10 @@ namespace Invoice.API.Domain.Services
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(6); // Descrição
-                                columns.RelativeColumn(2); // Qty
-                                columns.RelativeColumn(2); // Unit Price
-                                columns.RelativeColumn(2); // Total
+                                columns.RelativeColumn(5); // Descrio
+                                columns.ConstantColumn(50); // Qty
+                                columns.ConstantColumn(85); // Unit Price
+                                columns.ConstantColumn(95); // Total
                             });
 
                             table.Header(header =>
@@ -165,17 +165,13 @@ namespace Invoice.API.Domain.Services
                                 header.Cell().Element(HeaderStyle).AlignRight().Text("Amount");
 
                                 static IContainer HeaderStyle(IContainer c) =>
-                                    c.BorderBottom(1.5f).BorderColor(Colors.Black).PaddingVertical(5).DefaultTextStyle(x => x.SemiBold().FontSize(9));
+                                    c.BorderBottom(1.5f).BorderColor(Colors.Grey.Darken2).PaddingVertical(6).DefaultTextStyle(x => x.SemiBold().FontSize(9).FontColor(Colors.Grey.Darken3));
                             });
 
                             // Percorre os itens vindos da sua API
                             foreach (var item in invoice.InvoiceItems)
                             {
-                                table.Cell().Element(RowStyle).Column(c =>
-                                {
-                                    c.Item().Text(item.Description ?? "Item").SemiBold();
-                                    // Aqui você pode adicionar uma sub-descrição se sua API tiver
-                                });
+                                table.Cell().Element(RowStyle).Text(item.Description ?? "Item").FontSize(10);
 
                                 table.Cell().Element(RowStyle).AlignCenter().Text(item.Quantity.ToString());
                                 table.Cell().Element(RowStyle).AlignRight().Text($"$ {item.UnitPrice:0.00}");
@@ -183,26 +179,26 @@ namespace Invoice.API.Domain.Services
                             }
 
                             static IContainer RowStyle(IContainer c) =>
-                                c.BorderBottom(1).BorderColor(Colors.Grey.Lighten4).PaddingVertical(10);
+                                c.BorderBottom(0.8f).BorderColor(Colors.Grey.Lighten3).PaddingVertical(8);
                         });
 
                         // --- TOTAIS FINAIS ---
-                        column.Item().AlignRight().PaddingTop(20).Width(150).Column(c =>
+                        column.Item().AlignRight().PaddingTop(24).Width(220).Background(Colors.Grey.Lighten5).Padding(12).Column(c =>
                         {
                             c.Item().Row(r =>
                             {
-                                r.RelativeItem().Text("Subtotal:");
-                                r.RelativeItem().AlignRight().Text($"$ {invoice.TotalAmount:0.00}");
+                                r.RelativeItem().Text("Subtotal").FontColor(Colors.Grey.Darken2);
+                                r.ConstantItem(95).AlignRight().Text($"$ {invoice.TotalAmount:0.00}");
                             });
 
-                            c.Item().PaddingTop(5).BorderTop(1).BorderColor(Colors.Black).Row(r =>
+                            c.Item().PaddingTop(6).BorderTop(1).BorderColor(Colors.Grey.Darken2).Row(r =>
                             {
-                                r.RelativeItem().Text("Total:").SemiBold().FontSize(12);
-                                r.RelativeItem().AlignRight().Text($"$ {invoice.TotalAmount:0.00}").SemiBold().FontSize(12);
+                                r.RelativeItem().Text("Total").SemiBold().FontSize(12);
+                                r.ConstantItem(95).AlignRight().Text($"$ {invoice.TotalAmount:0.00}").SemiBold().FontSize(12).FontColor(accentColor);
                             });
                         });
 
-                        // --- NOTAS MENTAIS / RODAPÉ DO CONTEÚDO ---
+                        // --- NOTAS MENTAIS / RODAPÃ‰ DO CONTEÃšDO ---
                         column.Item().PaddingTop(50).Column(c =>
                         {
                             c.Item().Text("PAYMENT INSTRUCTIONS").FontSize(8).SemiBold().FontColor(Colors.Grey.Medium);
@@ -210,7 +206,7 @@ namespace Invoice.API.Domain.Services
                         });
                     });
 
-                    // --- RODAPÉ DA PÁGINA ---
+                    // --- RODAPÃ‰ DA PÃGINA ---
                     page.Footer().AlignRight().Text(x =>
                     {
                         x.Span("Page ").FontSize(9);
